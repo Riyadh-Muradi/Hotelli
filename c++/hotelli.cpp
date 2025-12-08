@@ -26,6 +26,8 @@ struct Huone
 
 Huone huoneet[MAX_HUONEITA];
 int huoneidenMaara = 0;
+int varausnumerot[MAX_HUONEITA];
+int varausnumeroMaara = 0;
 
 int arvoLuku(int min, int max)
 {
@@ -70,6 +72,13 @@ void alustaHotelli()
 void tallennaJSON()
 {
     ofstream jsonFile("data.json");
+
+    /* Tarkistetaan et tiedosto avautuu  */
+    if (!jsonFile.is_open())
+    {
+        cout << "Ei voitu avata json filua" << endl;
+        return;
+    }
 
     int vapaanaHuoneita = 0, varatuita = 0;
 
@@ -139,10 +148,48 @@ int tarkistaHuoneTyyppi(int tyyppi)
 void varaaHuone(int huoneNumero, string nimi)
 {
     /* Laitetaan huone varatuksi */
+    /* Tarkistetaan että huone ei ole jo varattu */
+    if (huoneet[huoneNumero - 1].varattu)
+    {
+        cout << "Huone on jo varattu" << endl;
+        return;
+    }
+
     huoneet[huoneNumero - 1].varattu = true;
     huoneet[huoneNumero - 1].asiakasNimi = nimi;
 
     int varausnumero = arvoLuku(10000, 99999);
+
+    /* Tarkistetaan että varausnumero ei ole jo käytössä */
+    bool loytyi = false;
+    for (int i = 0; i < varausnumeroMaara; i++)
+    {
+        if (varausnumerot[i] == varausnumero)
+        {
+            loytyi = true;
+            break;
+        }
+    }
+
+    /* Jos löytyi sama numero, arvotaan uusi */
+    while (loytyi)
+    {
+        varausnumero = arvoLuku(10000, 99999);
+        loytyi = false;
+        for (int i = 0; i < varausnumeroMaara; i++)
+        {
+            if (varausnumerot[i] == varausnumero)
+            {
+                loytyi = true;
+                break;
+            }
+        }
+    }
+
+    /* Tallennetaan varausnumero käytettyjen listaan */
+    varausnumerot[varausnumeroMaara] = varausnumero;
+    varausnumeroMaara++;
+
     huoneet[huoneNumero - 1].varausnumero = varausnumero;
 
     /* Alennukset: 0%, 10% tai 20% */
@@ -209,7 +256,7 @@ void etsiVaraus()
 
     if (nimi.empty())
     {
-        cout << "Nimi ei saa olla tyhjä!" << endl;
+        cout << "Nimi ei saa olla tyhjä" << endl;
         return;
     }
 
@@ -290,9 +337,9 @@ int main()
         cout << "Anna nimesi: ";
         getline(cin, nimi);
 
-        if (nimi.empty())
+        if (nimi.empty() || nimi.length() > 100)
         {
-            cout << "Nimi ei saa olla tyhjä!" << endl;
+            cout << "Nimi ei saa olla tyhjä tai yli 100 merkkiä" << endl;
             continue;
         }
 
@@ -303,13 +350,13 @@ int main()
         {
             cin.clear();
             cin.ignore(10000, '\n');
-            cout << "Virhe: Valitse 1 tai 2!" << endl;
+            cout << "Valitse 1 tai 2" << endl;
             continue;
         }
 
         if (huoneTyyppi < 1 || huoneTyyppi > 2)
         {
-            cout << "Virhe: Valitse 1 tai 2!" << endl;
+            cout << "Valitse 1 tai 2" << endl;
             cin.clear();
             cin.ignore(10000, '\n');
             continue;
@@ -323,7 +370,7 @@ int main()
 
         if (huoneNumero == -1)
         {
-            cout << "Kaikki huoneet varattuja!" << endl;
+            cout << "Kaikki huoneet varattuja" << endl;
             jatka = false;
             break;
         }
@@ -337,13 +384,13 @@ int main()
         {
             cin.clear();
             cin.ignore(10000, '\n');
-            cout << "Vähintään 1 yö!" << endl;
+            cout << "Vähintään 1 yö" << endl;
             continue;
         }
 
         if (yot < 1)
         {
-            cout << "Vähintään 1 yö!" << endl;
+            cout << "Vähintään 1 yö" << endl;
             continue;
         }
 
@@ -372,6 +419,6 @@ int main()
         }
     }
 
-    cout << "\nKiitos, näkemiin" << endl;
+    cout << "\nKiitos" << endl;
     return 0;
 }
